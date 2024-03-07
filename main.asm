@@ -1,7 +1,7 @@
 .model small
 
 .data
-
+; comment
 .code
 start:
     mov ah, 4Ch
