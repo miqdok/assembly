@@ -2,7 +2,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
-
     public static void main(String[] args) {
         // Зчитування підрядка
         Scanner scanner = new Scanner(System.in);
@@ -14,9 +13,13 @@ public class Main {
             // Зчитування N рядків
             ArrayList<String> lines = readNLines();
 
+
             // Пошук входжень підрядка та виведення результатів
             int[][] result = findingSubstring(lines, findingSubstring);
-            //System.out.println("Substring occurrences: ");
+
+            // Сортування результатів
+            mergeSort(result, 0, result.length - 1);
+
             for (int i = 0; i < result.length; i++) {
                 System.out.println(result[i][0] + " occurrences in line " + result[i][1]);
             }
@@ -25,8 +28,8 @@ public class Main {
         }
     }
 
-    // Метод для зчитування N рядків
-    private static ArrayList<String> readNLines() {
+    // Метод, що зчитує N рядків
+    public static ArrayList<String> readNLines() {
         Scanner scanner = new Scanner(System.in);
         ArrayList<String> lines = new ArrayList<>();
         int maxLines = 100;
@@ -48,8 +51,8 @@ public class Main {
         return lines;
     }
 
-    // Метод для пошуку входжень підрядка у кожному рядку
-    private static int[][] findingSubstring(ArrayList<String> lines, String substring) {
+    // Метод, що шукає входження підрядка
+    public static int[][] findingSubstring(ArrayList<String> lines, String substring) {
         int[][] result = new int[lines.size()][2];
 
         for (int i = 0; i < lines.size(); i++) {
@@ -62,7 +65,7 @@ public class Main {
     }
 
     // Метод, що рахує входження підрядка
-    private static int countSubstring(String line, String substring) {
+    public static int countSubstring(String line, String substring) {
         int count = 0;
         int lengthOfSubstring = substring.length();
         int lengthOfLine = line.length();
@@ -79,6 +82,64 @@ public class Main {
             }
         }
         return count;
+    }
+
+
+    // Метод сортування
+    public static void mergeSort(int[][] array, int low, int high) {
+        if (low < high) {
+            int mid = low + (high - low)/2;
+
+            // Рекурсивне сортування половинок
+            mergeSort(array, low, mid);
+            mergeSort(array, mid + 1, high);
+
+            // Злиття двох відсортованих половинок
+            merge(array, low, mid, high);
+        }
+    }
+
+    // Метод злиття
+    private static void merge(int[][] array, int low, int mid, int high) {
+        int leftLength = mid - low + 1;
+        int rightLength = high - mid;
+
+        // Створення тимчасових масивів для зберігання лівої та правої половинок
+        int[][] leftArray = new int[leftLength][2];
+        int[][] rightArray = new int[rightLength][2];
+
+        // Копіювання дані у тимчасові масиви
+        System.arraycopy(array, low, leftArray, 0, leftLength);
+        System.arraycopy(array, mid + 1, rightArray, 0, rightLength);
+
+        // Індекси для злиття
+        int i = 0, j = 0, l = low;
+
+        // Злиття лівої та правої половин
+        while (i < leftLength && j < rightLength) {
+            if (leftArray[i][0] <= rightArray[j][0]) {
+                array[l] = leftArray[i];
+                i++;
+            } else {
+                array[l] = rightArray[j];
+                j++;
+            }
+            l++;
+        }
+
+        // Копіювання залишків лівої половинки, якщо є
+        while (i < leftLength) {
+            array[l] = leftArray[i];
+            i++;
+            l++;
+        }
+
+        // Копіювання залишки правої половинка
+        while (j < rightLength) {
+            array[l] = rightArray[j];
+            j++;
+            l++;
+        }
     }
 
 }
