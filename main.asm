@@ -4,7 +4,7 @@
 .data
 substring db 255 dup(0)                  ; Змінна для зберігання командного рядка
 substringLength db ?                     ; Змінна для зберігання довжини командного рядка
-oneChar db ?                             ; Змінна для зберігання одного символу
+mainString db 255 dup(0)                 ; Змінна для зберігання одного символу
 
 .code
 main PROC
@@ -34,35 +34,12 @@ copy_substring:
     xor ax, ax
     mov di, offset substring
     mov cl, substringLength
-print_substring:
-    mov ah, 02h                          ; Функція виводу символу
-    mov dl, [di]                         ; Завантаження символу для виводу
-    int 21h                              ; Виклик DOS interrupt
-    inc di
-    dec cl
-    cmp cl, 0
-    jne print_substring
 
-    mov dl, 0Ah                          ; Новий рядок
+    mov ah, 3Fh
+    lea dx, mainString                   ; Завантаження адреси основного рядка в DX
+    mov cx, 255                          ; Завантаження довжини основного рядка в CX
     int 21h
 
-read_next:
-    mov ah, 3Fh                          ; Зчитування символа з stdin
-    mov bx, 0h                           ; stdin handle
-    mov cx, 1                            ; 1 byte to read
-    mov dx, offset oneChar               ; read to ds:dx 
-    int 21h                              ; ax = number of bytes read
-    
-    ; Перевірка на кінець файлу (EOF)
-    or ax, ax
-    jz end_program
-
-    ; Виведення зчитаного символу на stdout
-    mov ah, 02h                          ; Функція виводу символу
-    mov dl, [oneChar]                    ; Завантаження символу для виводу
-    int 21h                              ; Виклик DOS interrupt
-
-    jmp read_next                        ; Повторення процесу зчитування
 
 end_program:
     mov ax, 4C00h                        ; Завершення програми
