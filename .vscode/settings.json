@@ -1,0 +1,65 @@
+{
+    "masmtasm.ASM.emulator": "dosbox-x",
+    "masmtasm.ASM.mode": "workspace",
+    "masmtasm.ASM.actions": {
+        
+
+
+
+        "TASM": {
+            "baseBundle": "<built-in>/TASM.jsdos",
+            "before": [
+                "set PATH=C:\\TASM"
+            ],
+            "run": [
+                "TASM ${file}",
+                "TLINK ${filename}",
+                ">V1TEST ${filename}"
+            ],
+            "debug": [
+                "TASM /zi ${file}",
+                "TLINK /v/3 ${filename}.obj",
+                "copy C:\\TASM\\TDC2.TD TDCONFIG.TD",
+                "TD -cTDCONFIG.TD ${filename}.exe"
+            ]
+        },
+        "MASM-v6.11": {
+            "baseBundle": "<built-in>/MASM-v6.11.jsdos",
+            "before": [
+                "set PATH=C:\\MASM"
+            ],
+            "run": [
+                "masm ${file};",
+                "link ${filename};",
+                ">V1TEST ${filename}"
+            ],
+            "debug": [
+                "masm ${file};",
+                "link ${filename}.OBJ;",
+                ">debug ${filename}.exe"
+            ]
+        },
+        "MASM-v5.00": {
+            "baseBundle": "<built-in>/MASM-v5.00.jsdos",
+            "before": [
+                "set PATH=C:\\MASM"
+            ],
+            "run": [
+                "masm ${file};",
+                "link ${filename};",
+                ">${filename}"
+            ],
+            "debug": [
+                "masm ${file};",
+                "link ${filename}.OBJ;",
+                ">debug ${filename}.exe"
+            ],
+            "support": [
+                "jsdos",
+                "dosbox",
+                "dosbox-x",
+                "msdos player"
+            ]
+        }
+    }
+}
