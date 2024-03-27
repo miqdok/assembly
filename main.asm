@@ -2,6 +2,7 @@
 .stack 100h
 
 .data
+buffer db 10000 dup(0)                       ; Змінна для зберігання введеного рядка
 substring db 255 dup(0)                      ; Змінна для зберігання командного рядка
 substringLength db ?                         ; Змінна для зберігання довжини командного рядка
 mainString db 255 dup(0)                     ; Змінна для зберігання одного символу
@@ -33,12 +34,44 @@ copy_substring:
     cmp cl, 0
     jne copy_substring                       ; Повторення циклу, поки не буде скопійовано всі аргументи
 
-    mov ah, 3Fh
-    lea dx, mainString                       ; Завантаження адреси основного рядка в DX
-    mov cx, 255                              ; Завантаження довжини основного рядка в CX
+    mov ah, 3Fh                              ; Виклик DOS interrupt для зчитування з файлу
+    lea dx, buffer                           ; Завантаження адреси буфера в DX
+    mov cx, 10000                            ; Завантаження довжини буфера в CX
     int 21h                                  ; Виклик DOS interrupt для зчитування рядка
 
+    mov bx, offset buffer                    ; Завантаження адреси буфера в BX
+
+next_line:
+    mov si, offset mainString                ; Завантаження адреси рядка в SI
+
+    mov cx, 255
+clean_main_string:
+    mov byte ptr [si], 0                     ; Очищення рядка
+    inc si
+    loop clean_main_string
+
+    mov si, offset mainString
+
+next_char:
+    mov al, [bx]                             ; Завантаження символу з буфера в AL
+    inc bx                                   ; Збільшуємо на 1 індекс буфера
+    cmp al, 0Dh
+    jne skip_crlf
+    inc bx
+    jmp end_of_line
+skip_crlf:
+    cmp al, 0Ah                              ; Перевірка на кінець рядка
+    je end_of_line
+    cmp al, 0
+    je end_of_line
+    mov [si], al                             ; Збереження символу в рядку
+    inc si                                   ; Збільшуємо на 1 індекс рядка
+    jmp next_char
+
+end_of_line:
     call CountSubstring                      ; Виклик підпрограми для підрахунку підрядків
+    cmp byte ptr [bx], 0
+    jne next_line
 
 end_program:
     mov ax, 4C00h                            ; Завершення програми
@@ -71,7 +104,7 @@ CountSubstring proc
         mov al, [si]                         ; Завантаження символу з рядка в AL
         mov ah, [di]                         ; Завантаження символу з підрядка в AH
         inc si                               ; Збільшуємо на 1 індекс основного рядка
-        inc di                               ; Інкрементуємо індекс підрядка
+        inc di                               ; Збільшуємо на 1 індекс підрядка
         cmp al, ah                           ; Порівняння символів
         jne reset_substring                  ; Якщо не рівні, скидаємо індекс підрядка
         dec cl                               ; Зменшуємо на 1 каунтер довжини підрядка
