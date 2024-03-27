@@ -86,11 +86,47 @@ end_of_line:
     cmp byte ptr [bx], 0
     jne next_line
 
+    call BubbleSort
+
 end_program:
     mov ax, 4C00h                            ; Завершення програми
     int 21h                                  ; Виклик DOS interrupt
 
 main endp
+
+BubbleSort proc
+    ; Збереження регістрів
+    push ax
+    push cx
+    push si
+
+    mov cx, word ptr index                    ; Завантаження кількості рядків у CX
+    dec cx                                    ; index - 1
+outerLoop:
+    push cx
+    xor si, si                                ; si = 0
+innerLoop:
+    mov ax, [word ptr arrayCount + si]        ; Завантаження значення першого елемента в регістр ax
+    cmp ax, [word ptr arrayCount + si + 2]    ; Порівняння значень двох елементів 
+    jl nextStep                               ; Перехід на мітку nextStep, якщо значення першого менше за друге
+    xchg [word ptr arrayCount + si + 2], ax   ; Зміна значень
+    mov [word ptr arrayCount + si], ax
+
+    mov ax, [word ptr arrayIndex + si]        ; Завантаження відповідного індексу для першого елемента 
+    xchg [word ptr arrayIndex + si + 2], ax   ; Зміна індексів
+    mov [word ptr arrayIndex + si], ax
+nextStep:
+    add si, 2                                 ; Збільшення на 2, щоб перейти до наступного елемента
+    loop innerLoop                            ; Повторення внутрішнього циклу до завершення сортування всіх пар
+    pop cx
+    loop outerLoop                            ; Повторення зовнішнього циклу до завершення всього сортування
+
+    pop si                                    ; Відновлення регістрів
+    pop cx
+    pop ax
+
+    ret
+BubbleSort endp
 
 CountSubstring proc
     ; Збереження регістрів
