@@ -33,17 +33,14 @@ copy_substring:
     mov [di], al                             ; Копіювання аргументу до масиву параметрів
     inc si
     inc di    
-    dec cl
-    cmp cl, 0
-    jne copy_substring                       ; Повторення циклу, поки не буде скопійовано всі аргументи
+    loop copy_substring                      ; Повторення циклу, поки не буде скопійовано всі аргументи
 
     mov ah, 3Fh                              ; Виклик DOS interrupt для зчитування з файлу
-    lea dx, buffer                           ; Завантаження адреси буфера в DX
+    mov dx, offset buffer                    ; Завантаження адреси буфера в DX
     mov cx, 10000                            ; Завантаження довжини буфера в CX
     int 21h                                  ; Виклик DOS interrupt для зчитування рядка
 
     mov bx, offset buffer                    ; Завантаження адреси буфера в BX
-
     mov di, 0                                ; Ініціалізація індексу масиву
 
 next_line:
@@ -87,6 +84,33 @@ end_of_line:
     jne next_line
 
     call BubbleSort
+
+    xor si, si                               ; Очищення регістру SI
+    mov cx, index                            ; Завантаження значення index у регістр CX
+    
+print_line:                                  ; Початок циклу виведення рядків
+    mov ax, [word ptr arrayCount + si]       ; Завантаження кількості входжень підрядка з масиву у регістр AX
+    cmp ax, 0
+    je skip_line                             ; Якщо кількість входжень 0, не виведимо рядок
+    call StdoutDecimal                       
+
+    ; Виведення пробілу
+    mov dl, 20h                              
+    mov ah, 02h                              ; Код функції stdout
+    int 21h                                  ; Виклик DOS переривання
+
+    mov ax, [word ptr arrayIndex + si]       ; Завантаження індексу рядка з масиву у регістр AX
+    call StdoutDecimal
+  
+    ; Виведення символу нового рядка (CRLF)
+    mov ah, 02h
+    mov dl, 0Dh
+    int 21h                                  
+    mov dl, 0Ah
+    int 21h                                  
+skip_line:
+    add si, 2                                ; Перехід до наступного рядка
+    loop print_line
 
 end_program:
     mov ax, 4C00h                            ; Завершення програми
@@ -144,7 +168,7 @@ CountSubstring proc
 
     mov cl, substringLength                  ; Завантаження довжини підрядка в CL
 
-    mov bx, 0                                ; Ініціалізація індексу BX
+    xor bx, bx                               ; BX = 0
 
     find_substring: 
         mov dx, si                           ; Збереження поточної позиції в основному рядку
@@ -156,14 +180,12 @@ CountSubstring proc
         inc di                               ; Збільшуємо на 1 індекс підрядка
         cmp al, ah                           ; Порівняння символів
         jne reset_substring                  ; Якщо не рівні, скидаємо індекс підрядка
-        dec cl                               ; Зменшуємо на 1 каунтер довжини підрядка
-        jnz compare_chars                    ; Якщо каунтер довжини підрядка не дорівнює 0, продовжуємо порівняння
+        loop compare_chars                   ; Якщо каунтер довжини підрядка не дорівнює 0, продовжуємо порівняння
 
         inc count                            ; Збільшуємо на 1 лічильник збігів підрядка
         mov cl, substringLength              ; Перезавантаження каунтера довжини підрядка
         mov di, offset substring             ; Перезавантаження індексу підрядка
 
-        add bx, cx                           ; Переміщення індексу BX на наступний елемент після знайденого підрядка
         jmp continue_search                  ; Продовжуємо пошук з наступного елементу
 
     reset_substring:
@@ -172,20 +194,9 @@ CountSubstring proc
         mov di, offset substring             ; Перезавантаження індексу підрядка
         mov cl, substringLength              ; Перезавантаження каунтера довжини підрядка
 
-        inc bx                               ; Збільшуємо на 1 індекс BX
     continue_search:
-        cmp [byte ptr mainString + bx], 0    ; Перевірка, чи досягнуто кінця основного рядка
-        jne find_substring                   ; Якщо ні, продовжуємо пошук підрядка
-        jne find_substring                   ; Якщо ні, продовжуємо пошук підрядка
-
-        mov dx, count                        ; Кількість збігів підрядка
-        jne find_substring                   ; Якщо ні, продовжуємо пошук підрядка                    
-
-        mov dx, count                        ; Кількість збігів підрядка
-        
-        mov ax, count                        ; Кількість збігів підрядка
-        call StdoutDecimal                   ; Виклик підпрограми для виведення кількості входжень підрядка
-
+        cmp byte ptr [si], 0                 ; Перевірка, чи досягнуто кінця основного рядка
+        jne find_substring                   ; Якщо ні, продовжуємо пошук підрядка             
 
         pop di                               ; Відновлення значень реєстрів
         pop si
@@ -211,7 +222,7 @@ divide:
     div bx                                   ; Ділення AX на BX
     push dx                                  ; Запис залишку (цифри) у стек
     inc cx                                   ; Збільшуємо каунтер цифр на 1 
-    test ax, ax                              ; Перевірка чи результат ділення 0
+    cmp ax, 0                                ; Перевірка чи результат ділення 0
     jnz divide                               ; Якщо ні, продовжуємо ділення
 
 print_digit:
